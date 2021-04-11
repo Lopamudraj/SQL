@@ -1,0 +1,26 @@
+ have a timings table with the following definition:
+
+   Column   |            Type             | Collation | Nullable | Default
+------------+-----------------------------+-----------+----------+---------
+ start_time | timestamp without time zone |           | not null |
+ end_time   | timestamp without time zone |           | not null |
+ type       | integer                     |           | not null |
+It has data such as this:
+
+     start_time      |      end_time       | type
+---------------------+---------------------+------
+ 2020-11-10 23:50:00 | 2020-11-10 23:50:17 |    1
+ 2020-11-11 23:50:17 | 2020-11-11 23:50:34 |    1
+ 2020-11-10 23:50:08 | 2020-11-10 23:50:15 |    2
+ 2020-11-15 23:50:08 | 2020-11-16 23:50:08 |    2
+
+
+Solution :
+
+select sum(case when ref.maxi is null then 0 else ref.maxi end -
+           case when ref.mini is null then 0 else ref.mini end ) from(
+select t1.type, EXTRACT(SECOND FROM(t2.end_time-t2.start_time)) as mini ,EXTRACT(SECOND FROM(t1.end_time-t1.start_time)) as maxi
+from timings t1
+left outer join (select type,start_time,end_time from timings where type = 2) t2  
+on ( t2.start_time >= t1.start_time and t2.end_time <= t1.end_time)
+)ref;
